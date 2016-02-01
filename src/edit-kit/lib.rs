@@ -41,14 +41,16 @@ macro_rules! lock {
 }
 
 #[derive(Debug)]
-pub struct Editor {
+pub struct Editor<'a> {
     buffers: HashMap<String, Mutex<Buffer>>,
+    current_buffer: Option<&'a Mutex<Buffer>>
 }
 
-impl Editor {
-    pub fn new() -> Editor {
+impl<'a> Editor<'a> {
+    pub fn new() -> Editor<'a> {
         Editor {
             buffers: HashMap::new(),
+            current_buffer: None,
         }
     }
 
@@ -58,6 +60,18 @@ impl Editor {
 
     pub fn get_buffer<S: AsRef<str>>(&self, name: S) -> Option<&Mutex<Buffer>> {
         self.buffers.get(name.as_ref())
+    }
+
+    pub fn current_buffer(&self) -> Option<&Mutex<Buffer>> {
+        self.current_buffer
+    }
+
+    pub fn switch_to_buffer<S: AsRef<str>>(&'a mut self, name: S) -> Option<&'a Mutex<Buffer>> {
+        let res = self.buffers.get(name.as_ref());
+        if res.is_some() {
+            self.current_buffer = res;
+        }
+        res
     }
 }
 
@@ -94,6 +108,10 @@ impl Buffer {
 
     pub fn is_valid_pointer(&self, p: &Pointer) -> bool {
         p.line < self.content.len() && p.column <= self.content[p.line].chars().count()
+    }
+
+    pub fn content(&self) -> &Vec<String> {
+        &self.content
     }
 }
 
