@@ -17,9 +17,14 @@ fn main() {
 
     let mut i = 0;
     for line in buffer.content() {
-        rustbox.print(0, i, rustbox::RB_NORMAL, Color::White, Color::Black, line);
+        rustbox.print(0, i, rustbox::RB_NORMAL, Color::Default, Color::Default, line);
         i += 1;
     }
+
+    let pointer = buffer.pointer();
+
+    rustbox.set_cursor(pointer.column as isize, pointer.line as isize);
+
     rustbox.present();
 
     loop {

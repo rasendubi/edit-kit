@@ -106,19 +106,32 @@ impl Buffer {
         }
     }
 
-    pub fn is_valid_pointer(&self, p: &Pointer) -> bool {
+    pub fn is_valid_pointer(&self, p: Pointer) -> bool {
         p.line < self.content.len() && p.column <= self.content[p.line].chars().count()
     }
 
     pub fn content(&self) -> &Vec<String> {
         &self.content
     }
+
+    pub fn pointer(&self) -> Pointer {
+        self.pointer
+    }
+
+    pub fn set_pointer(&mut self, pointer: Pointer) -> bool {
+        if self.is_valid_pointer(pointer) {
+            self.pointer = pointer;
+            true
+        } else {
+            false
+        }
+    }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Pointer {
-    line: usize,
-    column: usize,
+    pub line: usize,
+    pub column: usize,
 }
 
 #[cfg(test)]
