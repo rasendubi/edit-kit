@@ -16,6 +16,7 @@ library
     hs-source-dirs:      edit-kit
     exposed-modules:     EditKit.Editor
                        , EditKit.Buffer
+                       , EditKit.Input
     default-language:    Haskell2010
     build-depends:       base >= 4.7 && < 5
                        , text

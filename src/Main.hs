@@ -4,6 +4,7 @@ module Main (main) where
 
 import qualified EditKit.Buffer as Buffer
 import qualified EditKit.Editor as Editor
+import qualified EditKit.Input as Input
 
 import Control.Concurrent.STM (STM, TVar, atomically, readTVar, writeTVar)
 import Control.Monad (when)
@@ -15,7 +16,10 @@ main :: IO ()
 main = do
   editor <- Editor.newIO
   buffer <- Buffer.fromFile "1.txt"
-  atomically $ Editor.insertBuffer editor "1.txt" buffer
+  atomically $ do
+    tbuffer <- Editor.insertBuffer editor "1.txt" buffer
+    Editor.setCurrent editor (Just tbuffer)
+
   vty <- mkVty =<< standardIOConfig
   let out = outputIface vty
 
@@ -34,63 +38,21 @@ main = do
         e <- nextEvent vty
         case e of
           EvKey (KChar 'q') [] -> return e
-          EvKey (KChar 'h') [] -> do
-            atomically $ do
-              Just tbuffer <- Editor.getBuffer editor "1.txt"
-              moveLeft tbuffer
-            loop
-          EvKey (KChar 'j') [] -> do
-            atomically $ do
-              Just tbuffer <- Editor.getBuffer editor "1.txt"
-              moveDown tbuffer
-            loop
-          EvKey (KChar 'k') [] -> do
-            atomically $ do
-              Just tbuffer <- Editor.getBuffer editor "1.txt"
-              moveUp tbuffer
-            loop
-          EvKey (KChar 'l') [] -> do
-            atomically $ do
-              Just tbuffer <- Editor.getBuffer editor "1.txt"
-              moveRight tbuffer
-            loop
-          _ -> loop
+          e -> Editor.feedInput editor (toEditorInput e) >> loop
 
   e <- loop
   shutdown vty
   print e
 
-moveUp :: TVar Buffer.Buffer -> STM ()
-moveUp tbuffer = do
-  buffer <- readTVar tbuffer
-  let c  = Buffer.cursor buffer
-  let c' = c{ Buffer.cursorLine = Buffer.cursorLine c - 1 }
-  when (Buffer.isValidCursor buffer c') $
-    writeTVar tbuffer buffer{ Buffer.cursor = c' }
+toEditorInput (EvKey key modifiers) = Input.EventKey (toEditorKey key) (fmap toEditorModifier modifiers)
 
-moveDown :: TVar Buffer.Buffer -> STM ()
-moveDown tbuffer = do
-  buffer <- readTVar tbuffer
-  let c  = Buffer.cursor buffer
-  let c' = c{ Buffer.cursorLine = Buffer.cursorLine c + 1 }
-  when (Buffer.isValidCursor buffer c') $
-    writeTVar tbuffer buffer{ Buffer.cursor = c' }
+toEditorKey (KChar k) = Input.KeyChar k
+toEditorKey _ = undefined
 
-moveLeft :: TVar Buffer.Buffer -> STM ()
-moveLeft tbuffer = do
-  buffer <- readTVar tbuffer
-  let c  = Buffer.cursor buffer
-  let c' = c{ Buffer.cursorColumn = Buffer.cursorColumn c - 1 }
-  when (Buffer.isValidCursor buffer c') $
-    writeTVar tbuffer buffer{ Buffer.cursor = c' }
-
-moveRight :: TVar Buffer.Buffer -> STM ()
-moveRight tbuffer = do
-  buffer <- readTVar tbuffer
-  let c  = Buffer.cursor buffer
-  let c' = c{ Buffer.cursorColumn = Buffer.cursorColumn c + 1 }
-  when (Buffer.isValidCursor buffer c') $
-    writeTVar tbuffer buffer{ Buffer.cursor = c' }
+toEditorModifier MShift = Input.Shift
+toEditorModifier MCtrl = Input.Ctrl
+toEditorModifier MMeta = Input.Meta
+toEditorModifier MAlt = Input.Alt
 
 bufferToImage :: Buffer.Buffer -> Image
 bufferToImage Buffer.Buffer{..} = vertCat . fmap (text' defAttr) . V.toList $ lines
