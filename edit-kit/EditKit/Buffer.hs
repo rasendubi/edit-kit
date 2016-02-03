@@ -30,4 +30,8 @@ fromFile :: FilePath -> IO Buffer
 fromFile file = Buffer . V.fromList . T.lines <$> T.readFile file <*> pure (Cursor 0 0)
 
 isValidCursor :: Buffer -> Cursor -> Bool
-isValidCursor Buffer{..} Cursor{..} = cursorLine < V.length lines && cursorColumn <= T.length (lines V.! cursorLine)
+isValidCursor Buffer{..} Cursor{..} =
+  cursorLine >= 0 &&
+  cursorLine < V.length lines &&
+  cursorColumn >= 0 &&
+  cursorColumn <= T.length (lines V.! cursorLine)
