@@ -1,0 +1,7 @@
+resolver: lts-4.2
+packages:
+- '.'
+extra-deps:
+- termbox-bindings-0.1.0.5
+flags: {}
+extra-package-dbs: []
