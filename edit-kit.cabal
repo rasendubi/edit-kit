@@ -23,6 +23,7 @@ library
                        , stm-containers
                        , vector
                        , stm
+    ghc-options:         -Wall -fno-warn-name-shadowing
 
 executable edit-kit
     hs-source-dirs:      src
@@ -33,4 +34,4 @@ executable edit-kit
                        , stm
                        , vty
                        , vector
-    ghc-options:         -threaded
+    ghc-options:         -threaded -Wall -fno-warn-name-shadowing

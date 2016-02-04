@@ -6,8 +6,7 @@ import qualified EditKit.Buffer as Buffer
 import qualified EditKit.Editor as Editor
 import qualified EditKit.Input as Input
 
-import Control.Concurrent.STM (STM, TVar, atomically, readTVar, writeTVar)
-import Control.Monad (when)
+import Control.Concurrent.STM (atomically, readTVar)
 import qualified Data.Vector as V
 
 import Graphics.Vty
@@ -44,11 +43,16 @@ main = do
   shutdown vty
   print e
 
+toEditorInput :: Event -> Input.Event
 toEditorInput (EvKey key modifiers) = Input.EventKey (toEditorKey key) (fmap toEditorModifier modifiers)
+toEditorInput ev = error $ "Unknown event: " ++ show ev
 
+
+toEditorKey :: Key -> Input.Key
 toEditorKey (KChar k) = Input.KeyChar k
 toEditorKey _ = undefined
 
+toEditorModifier :: Modifier -> Input.Modifier
 toEditorModifier MShift = Input.Shift
 toEditorModifier MCtrl = Input.Ctrl
 toEditorModifier MMeta = Input.Meta
